@@ -7,7 +7,9 @@ const methodOverride = require('method-override');
 const ejsMate = require('ejs-mate');
 const wrapAsync = require('./utils/wrapAsync.js');
 const ExpressError = require('./utils/ExpressError.js');
-const { listingSchema } = require('./schema.js'); //importing Joi schema for server side validation
+const { listingSchema, reviewSchema } = require('./schema.js'); //importing Joi schema for server side validation
+// const { reviewSchema } = require('./schema.js'); //importing Joi schema for server side validation
+const Review = require('./models/review.js'); //importing mongoose model for reviews from models/review.js
 
 const MONGO_URL = "mongodb://localhost:27017/JoyVoyage";
 main()
@@ -34,12 +36,23 @@ const validateListing = (req, res, next) => {
     //validating that req.body is satisfying the schema by Joi in schema.js else extract the error
     if (error) { //if error is present
         let errMsg = error.details.map(el => el.message).join(","); //extracting the error message
-        throw new ExpressError(400, errMsg);
+        throw new ExpressError(400, errMsg  ); //throw an error msg with status code 400
     } else {
         next(); //if no error, move to next middleware
     }
     //throw an error if result is not following the schema by Joi, handled by error handling middleware
 };
+
+const validateReview = (req, res, next) => {
+    let { error } = reviewSchema.validate(req.body); //validating that req.body is satisfying the schema by Joi in schema.js else extract the error
+    if (error) { //if error is present
+        let errMsg = error.details.map(el => el.message).join(","); //extracting the error message
+        throw new ExpressError(400, errMsg  ); //throw an error msg with status code 400
+    } else {
+        next(); //if no error, move to next middleware
+    }
+    //throw an error if result is not following the schema by Joi, handled by error handling middleware
+}
 
 //Index Route
 app.get("/listings", wrapAsync(async (req, res) => {
@@ -55,7 +68,7 @@ app.get("/listings/new", (req, res) => {
 //Show Route
 app.get("/listings/:id", wrapAsync(async (req, res) => {
     let { id } = req.params;
-    const listing = await Listing.findById(id);
+    const listing = await Listing.findById(id).populate("reviews"); //populating the reviews array with review data  
     res.render("listings/show.ejs", { listing });
 }));
 
@@ -97,6 +110,29 @@ app.delete("/listings/:id", wrapAsync(async (req, res) => {
     let deletedListing = await Listing.findByIdAndDelete(id);
     console.log(deletedListing);
     res.redirect("/listings");
+}));
+
+//Reviews
+//Post Route for review
+app.post("/listings/:id/reviews", validateReview, wrapAsync(async (req, res) => {
+    let listing = await  Listing.findById(req.params.id); //getting the listing id from params
+    let newReview = new Review(req.body.review); //creating new review instance using data recived from form
+
+    listing.reviews.push(newReview); //pushing the review to the review array of listing
+    await newReview.save(); //saving the review to DB
+    await listing.save(); //saving the listing to DB
+
+    res.redirect(`/listings/${listing._id}`); //redirecting to the listing page 
+})); 
+
+//Delete Route for review
+app.delete("/listings/:id/reviews/:reviewId", wrapAsync(async (req, res) => {
+    let { id, reviewId } = req.params; //getting the listing id and review id from params
+    await Listing.findByIdAndUpdate(id, { $pull: { reviews: reviewId } }); 
+    //removing the review that match with reviewId in reviews array from the listing using $pull operator
+    //used findByIdAndUpdate as we are updating review array in listing
+    await Review.findByIdAndDelete(reviewId); //deleting the review from DB
+    res.redirect(`/listings/${id}`); //redirecting to the listing page 
 }));
 
 // app.get("/testListings", async (req, res) => {
