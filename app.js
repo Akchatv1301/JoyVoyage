@@ -7,9 +7,13 @@ const ejsMate = require('ejs-mate');
 const ExpressError = require('./utils/ExpressError.js');
 const session = require('express-session'); //importing express-session for session management
 const flash = require('connect-flash'); //importing connect-flash for flash messages
+const passport = require('passport'); //importing passport for authentication
+const LocalStrategy = require('passport-local'); //importing local strategy for passport
+const User = require('./models/user.js'); //importing User model for user authentication
 
-const listings = require('./routes/listing.js'); //importing routes for listing
-const reviews = require('./routes/review.js'); //importing routes for review
+const listingsRouter = require('./routes/listing.js'); //importing routes for listing
+const reviewsRouter = require('./routes/review.js'); //importing routes for review
+const userRouter = require('./routes/user.js'); //importing routes for user
 
 const MONGO_URL = "mongodb://localhost:27017/JoyVoyage";
 main()
@@ -45,14 +49,33 @@ app.get("/", (req, res) => {
 app.use(session(sessionOptions)); //using session middleware
 app.use(flash()); //using flash middleware
 
+app.use(passport.initialize()); //initializing passport
+app.use(passport.session()); //using passport session
+passport.use(new LocalStrategy(User.authenticate())); //using local strategy for passport with User model
+
+passport.serializeUser(User.serializeUser()); //serializing user
+passport.deserializeUser(User.deserializeUser()); //deserializing user 
+
 app.use((req, res, next) => {
     res.locals.success = req.flash("success"); //to show success messages
     res.locals.error = req.flash("error"); //to show error messages
     next(); //move to next middleware. Here next is listings route that will handle the request
 });
 
-app.use("/listings", listings); //using the routes for listing
-app.use("/listings/:id/reviews", reviews); //using the routes for review
+// app.get("/demouser", async (req, res) => {
+//     let fakeUser = new User({
+//         email: "student@gmail.com",
+//         username: "delta-student1",
+//     }); 
+
+//     let registeredUser = await User.register(fakeUser, "helloworld");
+//     //registering the user with username and password
+//     res.send(registeredUser);
+// });
+
+app.use("/listings", listingsRouter); //using the routes for listing
+app.use("/listings/:id/reviews", reviewsRouter); //using the routes for review
+app.use("/", userRouter); //using the routes for user
 
 
 //For random routes
