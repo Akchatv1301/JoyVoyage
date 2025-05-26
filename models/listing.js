@@ -26,8 +26,13 @@ const listingSchema = new Schema({
             type: Schema.Types.ObjectId,
             ref: "Review",
         }
-    ] 
+    ],
     //storing an array of reviews with each listing whose type is objectId of reviews, using Review model for reference
+
+    owner: {
+        type: Schema.Types.ObjectId,
+        ref: "User", //referring to User model
+    },
 });
 
 listingSchema.post("findOneAndDelete", async (listing) => { //after deleting a listing, delete all the reviews associated with it

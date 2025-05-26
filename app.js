@@ -46,9 +46,11 @@ app.get("/", (req, res) => {
     res.send("Hello, I am root");
 });
 
+//For Express Session and Flash Messages
 app.use(session(sessionOptions)); //using session middleware
 app.use(flash()); //using flash middleware
 
+//For Passport Authentication
 app.use(passport.initialize()); //initializing passport
 app.use(passport.session()); //using passport session
 passport.use(new LocalStrategy(User.authenticate())); //using local strategy for passport with User model
@@ -56,9 +58,11 @@ passport.use(new LocalStrategy(User.authenticate())); //using local strategy for
 passport.serializeUser(User.serializeUser()); //serializing user
 passport.deserializeUser(User.deserializeUser()); //deserializing user 
 
+//For Flash Messages and res.locals middleware
 app.use((req, res, next) => {
     res.locals.success = req.flash("success"); //to show success messages
     res.locals.error = req.flash("error"); //to show error messages
+    res.locals.currUser = req.user; //to get the current user
     next(); //move to next middleware. Here next is listings route that will handle the request
 });
 
@@ -73,6 +77,7 @@ app.use((req, res, next) => {
 //     res.send(registeredUser);
 // });
 
+//For using the routes
 app.use("/listings", listingsRouter); //using the routes for listing
 app.use("/listings/:id/reviews", reviewsRouter); //using the routes for review
 app.use("/", userRouter); //using the routes for user

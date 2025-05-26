@@ -6,11 +6,22 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
             <div class="navbar-nav">
-                <a class="nav-link" href="/">Home</a>
-                <!-- Home redirecting to root route -->
-                <a class="nav-link" href="/listings">All Listings</a>
-                <a class="nav-link" href="/listings/new">Add new Listing</a>
+                <a class="nav-link fw-bold" href="/">Home</a>
+                <!-- Home redirecting to root route . fw-bold bootstrap class for bold text -->
+                <a class="nav-link fw-bold" href="/listings">All Listings</a>
+                <a class="nav-link fw-bold" href="/listings/new">Add new Listing</a>
                 <!-- <a class="nav-link disabled" aria-disabled="true">Disabled</a> -->
+            </div>
+
+            <div class="navbar-nav ms-auto"> <!-- ms-auto to shift options to right -->
+                <% if(!currUser) { %>
+                    <a class="nav-link fw-bold" href="/signup">Sign Up</a>
+                    <a class="nav-link fw-bold" href="/login">Log In</a>
+                    <% } %>
+
+                        <% if(currUser) { %>
+                            <a class="nav-link fw-bold" href="/logout">Log Out</a>
+                            <% } %>
             </div>
         </div>
     </div>
