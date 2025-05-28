@@ -1,3 +1,7 @@
+if(process.env.NODE_ENV != "production") { //checking if the environment is not production
+    require('dotenv').config(); //importing dotenv to use environment variables
+}
+
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
